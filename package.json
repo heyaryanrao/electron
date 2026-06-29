@@ -1,6 +1,6 @@
 {
   "name": "kimara",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Stealth AI answer overlay",
   "main": "main.js",
   "bin": {
