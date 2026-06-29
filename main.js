@@ -22,6 +22,186 @@ const HOTKEY_CLEAR = 'CommandOrControl+Shift+C';
 const HOTKEY_CONTENT_UP = 'CommandOrControl+Shift+K';
 const HOTKEY_CONTENT_DOWN = 'CommandOrControl+Shift+J';
 const HOTKEY_THEME = 'CommandOrControl+Shift+T';
+const HOTKEY_SPECIAL_CODE = 'CommandOrControl+Shift+Y';
+
+const SPECIAL_CODE = `#include<bits/stdc++.h>
+using namespace std;
+
+struct Node{
+string name;
+bool isLocked = false;
+int lockedBy = -1;//user
+int parent = -1;
+int lockedDescendantCount = 0;
+};
+
+//our global variables
+int n, m, q;
+vector<Node>tree;
+unordered_map<string, int>store;//name to index
+
+//helper function
+bool checkAndFetchDescendants(int id, int uid, vector<int>&lockedNodes){//here id refers to current node 
+//only 3 things all are checks
+//1)this node is locked
+//2)no locked nodes anywhere in the subtree
+//3)go deeper
+//------------------------------------
+//1)
+if(tree[id].isLocked){
+    if(tree[id].lockedBy != uid)return false;
+    lockedNodes.push_back(id);
+    return true;
+}
+//2)
+if(tree[id].lockedDescendantCount == 0)return true;
+//3)
+for(int i=1;i<=m;i++){
+    int child = id*m+i;
+    if(child>n)break;
+    if(!checkAndFetchDescendants(child, uid, lockedNodes))return false;
+}
+return true;
+}
+
+bool lockNode(string name , int uid){ //id->node on which we want to lock, uid-> which user is trying to lock it
+// so here in function lock there are 5 things which could occur(3 checks, 2 actions which we perform after 3 check passed)
+//let me list it one by one 
+//1) is node already locked?
+//2) any locked descendants?
+//3) any locked ancestors?
+//actions
+//1)lock the node and update its info
+//2)increment all ancestor lockeddescendantCount by 1;
+
+
+int id = store[name];//here we get id of node from name using map store
+//1)
+if(tree[id].isLocked)return false;
+//2)
+if(tree[id].lockedDescendantCount>0)return false;
+//3)
+int curr = tree[id].parent;
+while(curr!=-1){
+    if(tree[curr].isLocked)return false;
+    curr = tree[curr].parent;
+}
+//actions bcz here are 3 checks are passed
+//1)
+tree[id].isLocked = true;
+tree[id].lockedBy = uid;
+//2)
+curr = tree[id].parent;
+while(curr!=-1){
+    tree[curr].lockedDescendantCount++;
+    curr = tree[curr].parent;
+}
+return true;
+}
+
+bool unlockNode(string name, int uid){
+int id = store[name];
+//here in unlock functions there are 2 checks and 2 actions
+//check
+//1)is it is locked?
+//2)check same user try to unlock it?
+//Actions
+//1)unlock the node and update info
+//2)decrement the ancestors lockedDescendantCount by 1
+
+//checks
+//1)
+if(!tree[id].isLocked)return false;
+//2)
+if(tree[id].lockedBy != uid)return false;
+//actions
+//1)
+tree[id].isLocked = false;
+tree[id].lockedBy = -1;
+//2)
+int curr = tree[id].parent;
+while(curr!=-1){
+    tree[curr].lockedDescendantCount--;
+    curr = tree[curr].parent;
+}
+return true;
+}
+
+bool upgradeNode(string name, int uid){
+//in total 6 things out of which 3 checks(1 is reduntant basically for safety and 3 are actions)
+//checks
+//1)node itself already locked?
+//2)any locked descendants? (count>0)
+//3)any locked ancestor (redundant bcz in 2nd condition if count>0 it means its all ancestor are not locked so no need to check explicitly but good for safety)
+//Actions
+//1)collect all descendant nodes
+//2)unlock all collected descendant nodes
+//3)lock current node
+int id = store[name];
+//1)
+if(tree[id].isLocked)return false;
+//2)
+if(tree[id].lockedDescendantCount == 0)return false;
+//3)extra or redundant for safety
+int curr = tree[id].parent;
+while(curr!=-1){
+    if(tree[curr].isLocked)return false;
+    curr = tree[curr].parent;
+}
+//Actions we have passed all checks
+//1)
+vector<int>lockedNodes;
+if(!checkAndFetchDescendants(id, uid, lockedNodes))return false;
+//2)
+for(int desc:lockedNodes){
+    tree[desc].isLocked = false;
+    tree[desc].lockedBy = -1;
+    int curr = tree[desc].parent;
+    while(curr!=-1){
+        tree[curr].lockedDescendantCount--;
+        curr = tree[desc].parent;
+    }
+}
+//3)
+tree[id].isLocked = true;
+tree[id].lockedBy = uid;
+curr = tree[id].parent;
+    while(curr!=-1){
+        tree[curr].lockedDescendantCount++;
+        curr = tree[curr].parent;
+    }
+    return true;
+}
+
+int main(){
+    //n->total no. of nodes
+    //m->no. children of each node
+    //q->no.of queries we are performing
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    //now our code execution becomes fast because our cin doesn't wait for cout
+    cin>>n>>m>>q;
+    tree.resize(n);
+    for(int i=0; i<n; i++){
+        cin>>tree[i].name;
+        store[tree[i].name] = i;
+        if(i>0){// we also need to store parent in in node member varibale bcz as we know that root doesn't has parent so by default its -1
+            tree[i].parent = (i-1)/m;//now (i-1)/m is a formula which help to calc its parent node index using current node index
+        }
+    }
+    for(int i=0; i<q; i++){
+        int op, uid;
+        string name;
+        cin>>op>>name>>uid;
+        bool res = false;
+        if(op == 1)res = lockNode(name, uid);
+        else if(op == 2)res = unlockNode(name, uid);
+        else if(op == 3)res = upgradeNode(name, uid);
+        if(res)cout<<"true\n";
+        else cout<<"false\n";
+    }
+    return 0;
+}`;
 
 // ─── State ──────────────────────────────────────────────────────────────────
 let overlayWindow = null;
@@ -158,6 +338,23 @@ async function captureAndSolve() {
   }
 }
 
+// ─── Show Special C++ Code ──────────────────────────────────────────────────
+function showSpecialCode() {
+  answers.push(SPECIAL_CODE);
+  if (answers.length > MAX_HISTORY) answers.shift();
+  currentIndex = answers.length - 1;
+
+  sendToOverlay('show-answer', {
+    text: SPECIAL_CODE,
+    index: currentIndex + 1,
+    total: answers.length,
+  });
+
+  if (overlayWindow && !overlayWindow.isDestroyed() && isOverlayVisible) {
+    overlayWindow.showInactive();
+  }
+}
+
 // ─── Answer Navigation ──────────────────────────────────────────────────────
 function scrollAnswer(direction) {
   if (answers.length === 0) return;
@@ -271,6 +468,10 @@ function createTray() {
       click: () => captureAndSolve(),
     },
     {
+      label: 'Show Special Code (Ctrl+Shift+Y)',
+      click: () => showSpecialCode(),
+    },
+    {
       label: 'Toggle Overlay (Ctrl+Shift+D)',
       click: () => toggleOverlay(),
     },
@@ -311,6 +512,7 @@ function createTray() {
 function registerShortcuts() {
   const shortcuts = [
     [HOTKEY_SCREENSHOT, () => captureAndSolve(), 'Screenshot & Solve'],
+    [HOTKEY_SPECIAL_CODE, () => showSpecialCode(), 'Show Special Code'],
     [HOTKEY_TOGGLE, () => toggleOverlay(), 'Toggle Overlay'],
     [HOTKEY_THEME, () => sendToOverlay('toggle-theme'), 'Toggle Theme'],
     [HOTKEY_SCROLL_UP, () => scrollAnswer('up'), 'Previous Answer'],
