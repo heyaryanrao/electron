@@ -1,7 +1,7 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const { getNextKey, blacklistKey } = require('./lib/key-manager');
 
-const SYSTEM_PROMPT = `You are an answer-only bot. You will receive a screenshot of a question. Follow these rules STRICTLY:
+const SYSTEM_PROMPT = `You are an answer-only bot. Focus strictly on the core question in the screenshot and ignore all other content. Follow these rules STRICTLY:
 
 - If it is a SQL or DSA (Data Structures & Algorithms) question:
   1. For DSA questions, write a "Brute Force Approach" section: 2-3 minimal lines describing the brute-force way, followed by its Time and Space Complexity. Do NOT output code for this.
