@@ -28,7 +28,7 @@ html, body {
 
 /* ── Answer Box ──────────────────────────────────────────────────────────── */
 #answer-box {
-  opacity: 0.12;
+  opacity: 0.35;
   transition: opacity 0.3s ease;
   pointer-events: none;
   position: relative;
@@ -108,11 +108,11 @@ html, body {
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 0.12; transform: translateY(0); }
+  to   { opacity: 0.35; transform: translateY(0); }
 }
 
 @keyframes fadeOut {
-  from { opacity: 0.12; transform: translateY(0); }
+  from { opacity: 0.35; transform: translateY(0); }
   to   { opacity: 0; transform: translateY(8px); }
 }
 
