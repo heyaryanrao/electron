@@ -3,6 +3,7 @@ const answerText = document.getElementById('answer-text');
 const loading = document.getElementById('loading');
 const answerBox = document.getElementById('answer-box');
 const indexIndicator = document.getElementById('index-indicator');
+const overlayContainer = document.getElementById('overlay-container');
 
 // ─── Show Answer ────────────────────────────────────────────────────────────
 window.finder.onShowAnswer((data) => {
@@ -57,4 +58,16 @@ window.finder.onScrollContent((direction) => {
 // ─── Toggle Theme ───────────────────────────────────────────────────────────
 window.finder.onToggleTheme(() => {
   document.body.classList.toggle('light-theme');
+});
+
+// ─── Move Overlay Left/Right ────────────────────────────────────────────────
+let currentLeft = 30; // Matches initial CSS style (left: 30px)
+window.finder.onMoveOverlay((direction) => {
+  const moveAmount = 50; // Shift 50px per keypress
+  if (direction === 'left') {
+    currentLeft = Math.max(10, currentLeft - moveAmount);
+  } else {
+    currentLeft = Math.min(window.innerWidth - 620, currentLeft + moveAmount);
+  }
+  overlayContainer.style.left = `${currentLeft}px`;
 });

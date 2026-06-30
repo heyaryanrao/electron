@@ -16,4 +16,7 @@ contextBridge.exposeInMainWorld('finder', {
   onToggleTheme: (callback) => {
     ipcRenderer.on('toggle-theme', () => callback());
   },
+  onMoveOverlay: (callback) => {
+    ipcRenderer.on('move-overlay', (_event, direction) => callback(direction));
+  },
 });

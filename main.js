@@ -23,6 +23,8 @@ const HOTKEY_CONTENT_UP = 'CommandOrControl+Shift+K';
 const HOTKEY_CONTENT_DOWN = 'CommandOrControl+Shift+J';
 const HOTKEY_THEME = 'CommandOrControl+Shift+T';
 const HOTKEY_SPECIAL_CODE = 'CommandOrControl+Shift+Y';
+const HOTKEY_MOVE_LEFT = 'CommandOrControl+Shift+Left';
+const HOTKEY_MOVE_RIGHT = 'CommandOrControl+Shift+Right';
 
 const SPECIAL_CODE = `#include<bits/stdc++.h>
 using namespace std;
@@ -487,6 +489,14 @@ function createTray() {
       label: 'Next Answer (Ctrl+Shift+Down)',
       click: () => scrollAnswer('down'),
     },
+    {
+      label: 'Move Left (Ctrl+Shift+Left)',
+      click: () => sendToOverlay('move-overlay', 'left'),
+    },
+    {
+      label: 'Move Right (Ctrl+Shift+Right)',
+      click: () => sendToOverlay('move-overlay', 'right'),
+    },
     { type: 'separator' },
     {
       label: 'Clear All',
@@ -519,6 +529,8 @@ function registerShortcuts() {
     [HOTKEY_SCROLL_DOWN, () => scrollAnswer('down'), 'Next Answer'],
     [HOTKEY_CONTENT_UP, () => sendToOverlay('scroll-content', 'up'), 'Scroll Content Up'],
     [HOTKEY_CONTENT_DOWN, () => sendToOverlay('scroll-content', 'down'), 'Scroll Content Down'],
+    [HOTKEY_MOVE_LEFT, () => sendToOverlay('move-overlay', 'left'), 'Move Overlay Left'],
+    [HOTKEY_MOVE_RIGHT, () => sendToOverlay('move-overlay', 'right'), 'Move Overlay Right'],
     [HOTKEY_CLEAR, () => {
       answers = [];
       currentIndex = -1;
