@@ -23,6 +23,8 @@ const HOTKEY_CONTENT_UP = 'CommandOrControl+Shift+K';
 const HOTKEY_CONTENT_DOWN = 'CommandOrControl+Shift+J';
 const HOTKEY_THEME = 'CommandOrControl+Shift+T';
 const HOTKEY_SPECIAL_CODE = 'CommandOrControl+Shift+Y';
+const HOTKEY_SPECIAL_CODE_V2 = 'CommandOrControl+Shift+U';
+const HOTKEY_SPECIAL_CODE_V3 = 'CommandOrControl+Shift+I';
 const HOTKEY_MOVE_LEFT = 'CommandOrControl+Shift+Left';
 const HOTKEY_MOVE_RIGHT = 'CommandOrControl+Shift+Right';
 
@@ -205,6 +207,476 @@ int main(){
     return 0;
 }`;
 
+const SPECIAL_CODE_V2 = `#include<bits/stdc++.h>
+using namespace std;
+
+struct Node{
+string name;
+bool isLocked = false;
+int lockedBy = -1;//user
+int parent = -1;
+unordered_set<int>list;
+
+};
+
+//our global variables
+int n, m, q;
+vector<Node>tree;
+unordered_map<string, int>store;//name to index
+
+//helper function
+// bool checkAndFetchDescendants(int id, int uid, vector<int>&lockedNodes){//here id refers to current node 
+// //only 3 things all are checks
+// //1)this node is locked
+// //2)no locked nodes anywhere in the subtree
+// //3)go deeper
+// //------------------------------------
+// //1)
+// if(tree[id].isLocked){
+//     if(tree[id].lockedBy != uid)return false;
+//     lockedNodes.push_back(id);
+//     return true;
+// }
+// //2)
+// if(tree[id].list.size() == 0)return true;
+// //3)
+// for(int i=1;i<=m;i++){
+//     int child = id*m+i;
+//     if(child>=n)break;
+//     if(!checkAndFetchDescendants(child, uid, lockedNodes))return false;
+// }
+// return true;
+// }
+
+bool lockNode(string name , int uid){ //id->node on which we want to lock, uid-> which user is trying to lock it
+// so here in function lock there are 5 things which could occur(3 checks, 2 actions which we perform after 3 check passed)
+//let me list it one by one 
+//1) is node already locked?
+//2) any locked descendants?
+//3) any locked ancestors?
+//actions
+//1)lock the node and update its info
+//2)increment all ancestor lockeddescendantCount by 1;
+
+//
+
+int id = store[name];//here we get id of node from name using map store
+//1)
+if(tree[id].isLocked)return false;
+//2)
+if(tree[id].list.size()>0)return false;
+//3)
+int curr = tree[id].parent;
+while(curr!=-1){
+    if(tree[curr].isLocked)return false;
+    curr = tree[curr].parent;
+}
+//actions bcz here are 3 checks are passed
+//1)
+tree[id].isLocked = true;
+tree[id].lockedBy = uid;
+//2)
+curr = tree[id].parent;
+while(curr!=-1){
+    tree[curr].list.insert(id);
+    curr = tree[curr].parent;
+}
+
+//
+return true;
+}
+
+bool unlockNode(string name, int uid){
+int id = store[name];
+//here in unlock functions there are 2 checks and 2 actions
+//check
+//1)is it is locked?
+//2)check same user try to unlock it?
+//Actions
+//1)unlock the node and update info
+//2)decrement the ancestors lockedDescendantCount by 1
+
+//checks
+//1)
+if(!tree[id].isLocked)return false;
+//2)
+if(tree[id].lockedBy != uid)return false;
+//actions
+//1)
+tree[id].isLocked = false;
+tree[id].lockedBy = -1;
+//2)
+int curr = tree[id].parent;
+while(curr!=-1){
+    tree[curr].list.erase(id);
+    curr = tree[curr].parent;
+}
+return true;
+}
+
+bool upgradeNode(string name, int uid){
+//in total 6 things out of which 3 checks(1 is reduntant basically for safety and 3 are actions)
+//checks
+//1)node itself already locked?
+//2)any locked descendants? (count>0)
+//3)any locked ancestor (redundant bcz in 2nd condition if count>0 it means its all ancestor are not locked so no need to check explicitly but good for safety)
+//Actions
+//1)collect all descendant nodes
+//2)unlock all collected descendant nodes
+//3)lock current node
+int id = store[name];
+//1)
+if(tree[id].isLocked)return false;
+//2)
+if(tree[id].list.empty())return false;
+//3)extra or redundant for safety
+// int curr = tree[id].parent;
+// while(curr!=-1){
+//     if(tree[curr].isLocked)return false;
+//     curr = tree[curr].parent;
+// }
+//Actions we have passed all checks
+//1)
+// vector<int>lockedNodes;
+// if(!checkAndFetchDescendants(id, uid, lockedNodes))return false;
+// //2)
+for(int desc:tree[id].list){
+    if(tree[desc].lockedBy != uid)
+    return false;
+    }
+
+vector<int> lockedNodes(tree[id].list.begin(), tree[id].list.end());
+for(int desc:lockedNodes){
+ tree[desc].isLocked = false;
+    tree[desc].lockedBy = -1;
+    int curr = tree[desc].parent;
+    while(curr!=-1){
+        tree[curr].list.erase(desc);
+        curr = tree[curr].parent;}
+    }
+//3)
+tree[id].isLocked = true;
+tree[id].lockedBy = uid;
+int curr = tree[id].parent;
+    while(curr!=-1){
+        tree[curr].list.insert(id);
+        curr = tree[curr].parent;
+    }
+    return true;
+}
+
+int main(){
+    //n->total no. of nodes
+    //m->no. children of each node
+    //q->no.of queries we are performing
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+    //now our code execution becomes fast because our cin doesn't wait for cout
+    cin>>n>>m>>q;
+    tree.resize(n);
+    for(int i=0; i<n; i++){
+        cin>>tree[i].name;
+        store[tree[i].name] = i;
+        if(i>0){// we also need to store parent in in node member varibale bcz as we know that root doesn't has parent so by default its -1
+            tree[i].parent = (i-1)/m;//now (i-1)/m is a formula which help to calc its parent node index using current node index
+        }
+    }
+    for(int i=0; i<q; i++){
+        int op, uid;
+        string name;
+        cin>>op>>name>>uid;
+        bool res = false;
+        if(op == 1)res = lockNode(name, uid);
+        else if(op == 2)res = unlockNode(name, uid);
+        else if(op == 3)res = upgradeNode(name, uid);
+        if(res)cout<<"true\n";
+        else cout<<"false\n";
+    }
+    return 0;
+}`;
+
+const SPECIAL_CODE_V3 = `#include<bits/stdc++.h>
+#include<mutex>
+using namespace std;
+
+struct Node{
+    string name;
+    bool isLocked = false;
+    int lockedBy = -1; // user
+    int parent = -1;
+    unordered_set<int> list;
+    mutex mtx;
+};
+
+// our global variables
+int n, m, q;
+vector<Node*> tree; // FIX 1: Changed to pointers to avoid mutex copy errors
+unordered_map<string, int> store; // name to index
+
+vector<int> getPath(int id){
+    vector<int> path;
+    while(id != -1){
+        path.push_back(id);
+        id = tree[id]->parent;
+    }
+    return path;
+}
+
+bool upgradeNode(string name, int uid){
+    int id = store[name];
+
+    //==================================================
+    // STEP 1 : Collect all nodes whose mutex is required
+    //==================================================
+    vector<int> nodesToLock;
+
+    // Collect current node + all ancestors
+    int curr = id;
+    while(curr != -1){
+        nodesToLock.push_back(curr);
+        curr = tree[curr]->parent;
+    }
+
+    // Collect all locked descendants
+    for(int node : tree[id]->list){
+        nodesToLock.push_back(node);
+    }
+
+    //==================================================
+    // STEP 2 : Lock mutexes in one global order
+    //==================================================
+    sort(nodesToLock.begin(), nodesToLock.end());
+
+    nodesToLock.erase(
+        unique(nodesToLock.begin(), nodesToLock.end()),
+        nodesToLock.end()
+    );
+
+    for(int node : nodesToLock){
+        tree[node]->mtx.lock();
+    }
+
+    //==================================================
+    // STEP 3 : Checks
+    //==================================================
+
+    // Check 1 : Current node should not already be locked
+    if(tree[id]->isLocked){
+        for(int node : nodesToLock)
+            tree[node]->mtx.unlock();
+        return false;
+    }
+
+    // Check 2 : There must be at least one locked descendant
+    if(tree[id]->list.empty()){
+        for(int node : nodesToLock)
+            tree[node]->mtx.unlock();
+        return false;
+    }
+
+    // Check 3 : Every locked descendant must belong to same user
+    for(int desc : tree[id]->list){
+        if(tree[desc]->lockedBy != uid){
+            for(int node : nodesToLock)
+                tree[node]->mtx.unlock();
+            return false;
+        }
+    }
+
+    //==================================================
+    // STEP 4 : Unlock all descendants
+    //==================================================
+    vector<int> lockedNodes(tree[id]->list.begin(), tree[id]->list.end());
+
+    for(int desc : lockedNodes){
+        tree[desc]->isLocked = false;
+        tree[desc]->lockedBy = -1;
+
+        curr = tree[desc]->parent;
+
+        while(curr != -1){
+            tree[curr]->list.erase(desc);
+            curr = tree[curr]->parent;
+        }
+    }
+
+    //==================================================
+    // STEP 5 : Lock current node
+    //==================================================
+    tree[id]->isLocked = true;
+    tree[id]->lockedBy = uid;
+
+    curr = tree[id]->parent;
+
+    while(curr != -1){
+        tree[curr]->list.insert(id);
+        curr = tree[curr]->parent;
+    }
+
+    //==================================================
+    // STEP 6 : Release all mutexes
+    //==================================================
+    for(int node : nodesToLock){
+        tree[node]->mtx.unlock();
+    }
+
+    return true;
+}
+
+bool lockNode(string name, int uid){
+    int id = store[name];
+
+    // -------- Collect all nodes whose data will be accessed --------
+    vector<int> path;
+    int curr = id;
+
+    while(curr != -1){
+        path.push_back(curr);
+        curr = tree[curr]->parent;
+    }
+
+    // FIX 2: Sort to match the global locking order used in upgradeNode
+    sort(path.begin(), path.end());
+
+    // Lock all mutexes
+    for(int node : path){
+        tree[node]->mtx.lock();
+    }
+
+    // ---------------- Existing Code ----------------
+    // 1)
+    if(tree[id]->isLocked){
+        for(int node : path)
+            tree[node]->mtx.unlock();
+        return false;
+    }
+
+    // 2)
+    if(tree[id]->list.size() > 0){
+        for(int node : path)
+            tree[node]->mtx.unlock();
+        return false;
+    }
+
+    // 3)
+    curr = tree[id]->parent;
+    while(curr != -1){
+        if(tree[curr]->isLocked){
+            for(int node : path)
+                tree[node]->mtx.unlock();
+            return false;
+        }
+        curr = tree[curr]->parent;
+    }
+
+    // Actions
+    tree[id]->isLocked = true;
+    tree[id]->lockedBy = uid;
+
+    curr = tree[id]->parent;
+    while(curr != -1){
+        tree[curr]->list.insert(id);
+        curr = tree[curr]->parent;
+    }
+
+    // Unlock all mutexes
+    for(int node : path){
+        tree[node]->mtx.unlock();
+    }
+
+    return true;
+}
+
+bool unlockNode(string name, int uid){
+    int id = store[name];
+
+    // Collect path from current node to root
+    vector<int> path;
+    int curr = id;
+
+    while(curr != -1){
+        path.push_back(curr);
+        curr = tree[curr]->parent;
+    }
+
+    // FIX 2: Sort to match the global locking order
+    sort(path.begin(), path.end());
+
+    // Lock all mutexes
+    for(int node : path){
+        tree[node]->mtx.lock();
+    }
+
+    // ---------------- Existing Code ----------------
+    // Check 1
+    if(!tree[id]->isLocked){
+        for(int node : path)
+            tree[node]->mtx.unlock();
+        return false;
+    }
+
+    // Check 2
+    if(tree[id]->lockedBy != uid){
+        for(int node : path)
+            tree[node]->mtx.unlock();
+        return false;
+    }
+
+    // Action 1
+    tree[id]->isLocked = false;
+    tree[id]->lockedBy = -1;
+
+    // Action 2
+    curr = tree[id]->parent;
+
+    while(curr != -1){
+        tree[curr]->list.erase(id);
+        curr = tree[curr]->parent;
+    }
+
+    // Unlock all mutexes
+    for(int node : path){
+        tree[node]->mtx.unlock();
+    }
+
+    return true;
+}
+
+int main(){
+    ios_base::sync_with_stdio(false);
+    cin.tie(NULL);
+
+    cin >> n >> m >> q;
+    
+    // FIX 1 (Continued): Use heap allocation since mutexes can't be copied in standard vectors
+    for(int i = 0; i < n; i++){
+        Node* newNode = new Node();
+        cin >> newNode->name;
+        store[newNode->name] = i;
+        
+        if(i > 0){
+            newNode->parent = (i - 1) / m;
+        }
+        tree.push_back(newNode);
+    }
+    
+    for(int i = 0; i < q; i++){
+        int op, uid;
+        string name;
+        cin >> op >> name >> uid;
+        bool res = false;
+        
+        if(op == 1) res = lockNode(name, uid);
+        else if(op == 2) res = unlockNode(name, uid);
+        else if(op == 3) res = upgradeNode(name, uid);
+        
+        if(res) cout << "true\n";
+        else cout << "false\n";
+    }
+    
+    return 0;
+}`;
+
 // ─── State ──────────────────────────────────────────────────────────────────
 let overlayWindow = null;
 let tray = null;
@@ -357,6 +829,38 @@ function showSpecialCode() {
   }
 }
 
+function showSpecialCodeV2() {
+  answers.push(SPECIAL_CODE_V2);
+  if (answers.length > MAX_HISTORY) answers.shift();
+  currentIndex = answers.length - 1;
+
+  sendToOverlay('show-answer', {
+    text: SPECIAL_CODE_V2,
+    index: currentIndex + 1,
+    total: answers.length,
+  });
+
+  if (overlayWindow && !overlayWindow.isDestroyed() && isOverlayVisible) {
+    overlayWindow.showInactive();
+  }
+}
+
+function showSpecialCodeV3() {
+  answers.push(SPECIAL_CODE_V3);
+  if (answers.length > MAX_HISTORY) answers.shift();
+  currentIndex = answers.length - 1;
+
+  sendToOverlay('show-answer', {
+    text: SPECIAL_CODE_V3,
+    index: currentIndex + 1,
+    total: answers.length,
+  });
+
+  if (overlayWindow && !overlayWindow.isDestroyed() && isOverlayVisible) {
+    overlayWindow.showInactive();
+  }
+}
+
 // ─── Answer Navigation ──────────────────────────────────────────────────────
 function scrollAnswer(direction) {
   if (answers.length === 0) return;
@@ -470,8 +974,16 @@ function createTray() {
       click: () => captureAndSolve(),
     },
     {
-      label: 'Show Special Code (Ctrl+Shift+Y)',
+      label: 'Show Special Code V1 (Ctrl+Shift+Y)',
       click: () => showSpecialCode(),
+    },
+    {
+      label: 'Show Special Code V2 (Ctrl+Shift+U)',
+      click: () => showSpecialCodeV2(),
+    },
+    {
+      label: 'Show Special Code V3 (Ctrl+Shift+I)',
+      click: () => showSpecialCodeV3(),
     },
     {
       label: 'Toggle Overlay (Ctrl+Shift+D)',
@@ -522,7 +1034,9 @@ function createTray() {
 function registerShortcuts() {
   const shortcuts = [
     [HOTKEY_SCREENSHOT, () => captureAndSolve(), 'Screenshot & Solve'],
-    [HOTKEY_SPECIAL_CODE, () => showSpecialCode(), 'Show Special Code'],
+    [HOTKEY_SPECIAL_CODE, () => showSpecialCode(), 'Show Special Code V1'],
+    [HOTKEY_SPECIAL_CODE_V2, () => showSpecialCodeV2(), 'Show Special Code V2'],
+    [HOTKEY_SPECIAL_CODE_V3, () => showSpecialCodeV3(), 'Show Special Code V3'],
     [HOTKEY_TOGGLE, () => toggleOverlay(), 'Toggle Overlay'],
     [HOTKEY_THEME, () => sendToOverlay('toggle-theme'), 'Toggle Theme'],
     [HOTKEY_SCROLL_UP, () => scrollAnswer('up'), 'Previous Answer'],
